@@ -36,6 +36,8 @@ let cellColors = [];
 
 // drag and drop variables
 let dragging = false;
+let globalOffsetX = 0;
+let globalOffsetY = 0;
 
 // game variables
 let score = 0;
@@ -475,9 +477,9 @@ function shapeDragStart(event) {
   const offsetX = event.clientX - rect.left;
   const offsetY = event.clientY - rect.top;
 
-  // set the offset as data
-  event.dataTransfer.setData("offsetX", offsetX);
-  event.dataTransfer.setData("offsetY", offsetY);
+  // set the offset data
+  globalOffsetX = offsetX;
+  globalOffsetY = offsetY;
 
   // hide the shape in the shape container but not the dragged shape
   // to do this we add visibility hidden to the shape container 1ms after the drag start
@@ -505,8 +507,8 @@ function shapeDragEnd(event) {
   }
 
   // get the offset from the data
-  const offsetX = parseInt(event.dataTransfer.getData("offsetX"));
-  const offsetY = parseInt(event.dataTransfer.getData("offsetY"));
+  const offsetX = globalOffsetX;
+  const offsetY = globalOffsetY;
 
   // get the number of cells before the shape was placed
   let cellDiff = cells.length;
@@ -707,8 +709,8 @@ function canvasDragOver(event) {
   }
 
   // get the offset from the data
-  const offsetX = parseInt(event.dataTransfer.getData("offsetX"));
-  const offsetY = parseInt(event.dataTransfer.getData("offsetY"));
+  const offsetX = globalOffsetX;
+  const offsetY = globalOffsetY;
 
   canvasDrawShape(
     shape,
@@ -733,6 +735,8 @@ function canvasDrawShape(
   if (!cellIndex) {
     return;
   }
+
+  console.log(cellIndex)
 
   // double check that the shape is within the canvas
   if (
@@ -818,7 +822,7 @@ function findRelativeCellIndex(shapeX, shapeY) {
   const rect = canvas.getBoundingClientRect();
   const canvasShapeX = shapeX - rect.left;
   const canvasShapeY = shapeY - rect.top;
-
+  
   return findCellIndex(canvasShapeX, canvasShapeY, gridSize);
 }
 
