@@ -83,10 +83,10 @@ function updateSpanText(id, text) {
 }
 
 // set a cookie with a name, value, and expiration in days
-function setCookie(cname, cvalue, exdays=365) {
+function setCookie(cname, cvalue, exdays = 365) {
   const d = new Date();
-  d.setTime(d.getTime() + (exdays*24*60*60*1000));
-  let expires = "expires="+ d.toUTCString();
+  d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
+  let expires = "expires=" + d.toUTCString();
   document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
@@ -94,10 +94,10 @@ function setCookie(cname, cvalue, exdays=365) {
 function getCookie(cname) {
   let name = cname + "=";
   let decodedCookie = decodeURIComponent(document.cookie);
-  let ca = decodedCookie.split(';');
-  for(let i = 0; i <ca.length; i++) {
+  let ca = decodedCookie.split(";");
+  for (let i = 0; i < ca.length; i++) {
     let c = ca[i];
-    while (c.charAt(0) == ' ') {
+    while (c.charAt(0) == " ") {
       c = c.substring(1);
     }
     if (c.indexOf(name) == 0) {
@@ -569,7 +569,7 @@ function shapeDragEnd(event) {
       setCookie("highScore", highScore);
       updateSpanText("high-score", `High Score: ${highScore}`);
     }
-    
+
     // check if all three shapes have been placed
     let shapes = document.getElementsByClassName("shapeCanvas");
     if (shapes.length === 0) {
