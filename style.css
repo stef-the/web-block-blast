@@ -9,6 +9,22 @@ body {
   user-select: none;
 }
 
+#span-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+#span-container span {
+  display: inline-block;
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #ddd;
+  border: 2px solid #aaa;
+  cursor: pointer;
+  font-family: 'Courier New', Courier, monospace;
+}
+
 #canvas {
   display: block;
   position: fixed;
