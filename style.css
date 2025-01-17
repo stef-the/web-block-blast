@@ -1,0 +1,46 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  user-select: none;
+}
+
+#canvas {
+  display: block;
+  position: fixed;
+  background-color: #ddd;
+}
+
+#shape-container {
+  display: flex;
+  justify-content: space-evenly;
+  background-color: #ddd;
+  border: 2px solid #aaa;
+  position: fixed;
+  top: 10vh;
+  height: 10vh;
+  z-index: 1;
+}
+
+.shape {
+  display: inline-block;
+  width: 10vw;
+  height: 10vw;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.shape canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(-50% - 1px), calc(-50% - 1px));
+}
