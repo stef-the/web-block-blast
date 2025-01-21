@@ -38,6 +38,9 @@ let cellColors = [];
 let dragging = false;
 let globalOffsetX = 0;
 let globalOffsetY = 0;
+let globalShapeIndex = 0;
+let globalRotations = 0;
+let globalColor = "#000";
 
 // game variables
 let score = 0;
@@ -458,19 +461,13 @@ function shapeDragStart(event) {
   const shapeCanvas = shape.firstChild;
 
   // set the shape index as data
-  event.dataTransfer.setData(
-    "shapeIndex",
-    shapeCanvas.getAttribute("data-shape-index")
-  );
+  globalShapeIndex = shapeCanvas.getAttribute("data-shape-index");
 
   // set the number of rotations as data
-  event.dataTransfer.setData(
-    "rotations",
-    shapeCanvas.getAttribute("data-rotations")
-  );
+  globalRotations = shapeCanvas.getAttribute("data-rotations");
 
   // set the shape color as data
-  event.dataTransfer.setData("color", shapeCanvas.getAttribute("data-color"));
+  globalColor = shapeCanvas.getAttribute("data-color");
 
   // get difference between mouse position and top left corner of the shape
   const rect = shapeCanvas.getBoundingClientRect();
@@ -495,11 +492,14 @@ function shapeDragEnd(event) {
   shapeElement.style.visibility = "";
 
   // get the shape index, rotations, and color from the dataTransfer
-  const shapeIndex = event.dataTransfer.getData("shapeIndex");
-  const shapeRotations = event.dataTransfer.getData("rotations");
-  const shapeColor = event.dataTransfer.getData("color");
+  const shapeIndex = globalShapeIndex;
+  const shapeRotations = globalRotations;
+  const shapeColor = globalColor;
 
   let shape = shapeBlueprints[shapeIndex];
+
+  // get the original score before updating to compare
+  let originalScore = score;
 
   // rotate the shape based on the number of rotations
   for (let i = 0; i < shapeRotations; i++) {
@@ -530,6 +530,9 @@ function shapeDragEnd(event) {
 
     // check for full lines and clear them
     const linesCleared = clearLines();
+
+    // redraw the grid
+    drawFullGrid(globalGridSize);
 
     // update score by 1 point per placed cell
     score += cells.length - cellDiff;
@@ -583,6 +586,21 @@ function shapeDragEnd(event) {
       setShapeEventListeners(document.getElementById("shape2"));
       setShapeEventListeners(document.getElementById("shape3"));
     }
+  }
+  // animate the points alert
+  if (score > originalScore) {
+    // get mouse x and y
+    let offsetX = event.clientX - 10;
+    let offsetY = event.clientY - 30;
+    animateAlert(
+      `+${score - originalScore}`,
+      (destination = null),
+      (offsetX = offsetX),
+      (offsetY = offsetY),
+      (id = "points-alert"),
+      (random = true),
+      (customColor = shapeColor)
+    );
   }
 }
 
@@ -699,8 +717,8 @@ function canvasDragOver(event) {
   event.preventDefault();
   // draw the shape in the canvas using top left corner of the shape
   // get the shape index and rotations from the data
-  const shapeIndex = event.dataTransfer.getData("shapeIndex");
-  const shapeRotations = event.dataTransfer.getData("rotations");
+  const shapeIndex = globalShapeIndex;
+  const shapeRotations = globalRotations;
   let shape = shapeBlueprints[shapeIndex];
 
   // rotate the shape based on the number of rotations
@@ -735,8 +753,6 @@ function canvasDrawShape(
   if (!cellIndex) {
     return;
   }
-
-  console.log(cellIndex)
 
   // double check that the shape is within the canvas
   if (
@@ -822,7 +838,7 @@ function findRelativeCellIndex(shapeX, shapeY) {
   const rect = canvas.getBoundingClientRect();
   const canvasShapeX = shapeX - rect.left;
   const canvasShapeY = shapeY - rect.top;
-  
+
   return findCellIndex(canvasShapeX, canvasShapeY, gridSize);
 }
 
@@ -861,9 +877,6 @@ function checkLines() {
     cols[cells[i][0]]++;
   }
 
-  console.log("rows", rows);
-  console.log("cols", cols);
-
   // check for full rows
   for (let i = 0; i < globalGridSize; i++) {
     if (rows[i] == globalGridSize) {
@@ -877,8 +890,6 @@ function checkLines() {
       fullCols.push(i);
     }
   }
-
-  console.log(fullRows, fullCols);
 
   return [fullRows, fullCols];
 }
@@ -911,4 +922,96 @@ function clearLines() {
 
   // return the number of lines cleared
   return fullRows.length + fullCols.length;
+}
+
+// ------------------------------------
+// Animation Functions
+// ------------------------------------
+
+// points alert animation
+function animateAlert(
+  text,
+  destination = document.body,
+  offsetX = 0,
+  offsetY = 0,
+  id = null,
+  random = false,
+  customColor = null
+) {
+  const alert = document.createElement("div");
+  alert.classList.add("points-alert");
+  alert.textContent = `${text}`;
+
+  if (id) alert.id = id;
+
+  // set destination position to 0 if not provided
+  let destinationX = 0;
+  let destinationY = 0;
+
+  // get relative position of the destination
+  if (destination) {
+    const rect = destination.getBoundingClientRect();
+    destinationX = rect.left;
+    destinationY = rect.top;
+  }
+
+  // set the alert position
+  alert.style.top = `${offsetY + destinationY}px`;
+  alert.style.left = `${offsetX + destinationX}px`;
+
+  if (random) {
+    alert.style.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+    alert.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+  }
+
+  if (customColor) alert.style.color = customColor;
+
+  document.body.appendChild(alert);
+
+  setTimeout(() => {
+    alert.style.opacity = 0;
+    alert.style.transform = "translateY(0)";
+    document.body.removeChild(alert);
+  }, 1000);
+}
+
+// points alert animation with random location within coordinates
+function animateAlertInCoordinates(
+  text,
+  x0,
+  y0,
+  x1,
+  y1,
+  id = null,
+  random = false
+) {
+  // get random position within the coordinates
+  const offsetX = Math.random() * (x1 - x0) + x0;
+  const offsetY = Math.random() * (y1 - y0) + y0;
+
+  animateAlert(
+    text,
+    document.body,
+    offsetX,
+    offsetY,
+    (id = id),
+    (random = random)
+  );
+
+  // return the offset values
+  return [offsetX, offsetY];
+}
+
+// points alert animation with random location within the canvas
+function animateAlertInCanvas(text, id = null, random = false) {
+  const canvas = document.getElementById("canvas");
+
+  // get canvas x0, y0, x1, y1
+  const rect = canvas.getBoundingClientRect();
+  const x0 = rect.left;
+  const y0 = rect.top;
+  const x1 = rect.right;
+  const y1 = rect.bottom;
+
+  animateAlertInCoordinates(text, x0, y0, x1, y1, (id = id), (random = random));
 }
