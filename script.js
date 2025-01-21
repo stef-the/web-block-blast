@@ -15,6 +15,9 @@ window.addEventListener("load", () => {
   }
 
   canvas.addEventListener("dragover", canvasDragOver);
+  document
+    .getElementById("color-palette")
+    .addEventListener("click", updateColorPalette);
 });
 
 window.addEventListener("resize", handleOnResize);
@@ -49,6 +52,83 @@ let streakLives = 0;
 let highScore = getCookie("highScore") ?? 0;
 
 // ------------------------------------
+// Shape Colors
+// ------------------------------------
+
+const bbPalette = [
+  "#bb0000",
+  "#00bb00",
+  "#0000bb",
+  "#bbbb00",
+  "#bb00bb",
+  "#00bbbb",
+];
+
+const redsPalette = ["#09122C", "#872341", "#BE3144", "#E17564"];
+
+const beachPalette = ["#16C47F", "#FFD65A", "#FF9D23", "#F93827"];
+
+const sweetAndSour = [
+  "#979596",
+  "#a5bcbd",
+  "#e7e3c7",
+  "#f5b97b",
+  "#ed8978",
+  "#a45259",
+  "#643159",
+  "#816b24",
+  "#96af2e",
+  "#469852",
+  "#b967ad",
+  "#6950d1",
+  "#7e94db",
+  "#9bcea6",
+  "#5bada6",
+  "#127687",
+  "#0a4684",
+  "#181c38",
+  "#5a4342",
+  "#686a69",
+];
+
+const nordPalette = [
+  "#8fbcbb",
+  "#88c0d0",
+  "#81a1c1",
+  "#5e81ac",
+  "#bf616a",
+  "#d08770",
+  "#ebcb8b",
+  "#a3be8c",
+  "#b48ead",
+];
+
+const SLSO8Palette = [
+  "#0d2b45",
+  "#203c56",
+  "#544e68",
+  "#8d697a",
+  "#d08159",
+  "#ffaa5e",
+  "#ffd4a3",
+  "#ffecd6",
+];
+
+const colorPalettes = {
+  Default: bbPalette,
+  Reds: redsPalette,
+  Beach: beachPalette,
+  "Sweet and Sour": sweetAndSour,
+  Nord: nordPalette,
+  SLSO8: SLSO8Palette,
+};
+
+// set the shape colors
+let currentPalette =
+  getCookie("colorPalette") === "" ? "Default" : getCookie("colorPalette");
+let shapeColors = colorPalettes[currentPalette];
+
+// ------------------------------------
 // score and streak text
 // ------------------------------------
 
@@ -56,6 +136,7 @@ updateSpanText("score", `Score: ${score}`);
 updateSpanText("streak", `Streak: ${streak}`);
 updateSpanText("streak-lives", `Streak Lives: ${streakLives}`);
 updateSpanText("high-score", `High Score: ${highScore}`);
+updateSpanText("color-palette", `Colour Palette: ${currentPalette}`);
 
 // ------------------------------------
 // Helper Functions
@@ -110,6 +191,30 @@ function getCookie(cname) {
     }
   }
   return "";
+}
+
+// ------------------------------------
+// Color Palette Functions
+// ------------------------------------
+
+// convert hex color to rgb
+hexToRgb = (hex) => {
+  let r = parseInt(hex.substring(1, 3), 16);
+  let g = parseInt(hex.substring(3, 5), 16);
+  let b = parseInt(hex.substring(5, 7), 16);
+  return [r, g, b];
+};
+
+// format rgb color string
+rgbToRgb = (rgb) => {
+  return rgb.split("(")[1].split(")")[0].split(",");
+}
+
+// get luma value of a hex color
+function getLuma(rgb) {
+  // per ITU-R BT.709
+  const lumaValue = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  return lumaValue; 
 }
 
 // ------------------------------------
@@ -697,15 +802,6 @@ const shapeBlueprints = [
   [[1]],
 ];
 
-const shapeColors = [
-  "#bb0000",
-  "#00bb00",
-  "#0000bb",
-  "#bbbb00",
-  "#bb00bb",
-  "#00bbbb",
-];
-
 // ------------------------------------
 // Canvas Drag and Drop Functions
 // ------------------------------------
@@ -959,12 +1055,18 @@ function animateAlert(
   alert.style.top = `${offsetY + destinationY}px`;
   alert.style.left = `${offsetX + destinationX}px`;
 
+  // set the alert color
   if (random) {
     alert.style.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
     alert.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
   }
 
   if (customColor) alert.style.color = customColor;
+
+  // if alert color is dark, set the outline to white equivalent
+  if (getLuma(rgbToRgb(alert.style.color)) < 90) {
+    alert.style.textShadow = "-1px -1px 0 #eee, 1px -1px 0 #eee, -1px 1px 0 #eee, 1px 1px 0 #eee";
+  }
 
   document.body.appendChild(alert);
 
@@ -1014,4 +1116,25 @@ function animateAlertInCanvas(text, id = null, random = false) {
   const y1 = rect.bottom;
 
   animateAlertInCoordinates(text, x0, y0, x1, y1, (id = id), (random = random));
+}
+
+// update the color palette to the next one
+function updateColorPalette() {
+  // get the current color palette
+  const palettes = Object.keys(colorPalettes);
+  let currentIndex = palettes.indexOf(currentPalette);
+
+  // get the next color palette
+  currentIndex = (currentIndex + 1) % palettes.length;
+  currentPalette = palettes[currentIndex];
+  shapeColors = colorPalettes[currentPalette];
+
+  // update the color palette text
+  updateSpanText("color-palette", `Colour Palette: ${currentPalette}`);
+
+  // update cookies to store the current color palette
+  setCookie("colorPalette", currentPalette);
+
+  // refresh page to apply the new color palette
+  location.reload();
 }
