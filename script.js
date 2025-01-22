@@ -168,6 +168,25 @@ function updateSpanText(id, text) {
   document.getElementById(id).textContent = text;
 }
 
+// update text content of a span by id with a number
+// animate the number change (increasing or decreasing)
+// over a specified time in milliseconds
+function updateSpanTextNumber(id, number, time) {
+  const span = document.getElementById(id);
+  const start = parseInt(span.textContent);
+  const increment = number - start;
+  const step = increment / (time / 10);
+  let current = start;
+
+  const interval = setInterval(() => {
+    current += step;
+    span.textContent = Math.round(current);
+    if (current >= number) {
+      clearInterval(interval);
+    }
+  }, 10);
+}
+
 // set a cookie with a name, value, and expiration in days
 function setCookie(cname, cvalue, exdays = 365) {
   const d = new Date();
@@ -803,7 +822,7 @@ function shapeDragEnd(event) {
     }
 
     // update the score and streak text
-    updateSpanText("score", `${score}`);
+    updateSpanTextNumber("score", `${score}`, 500);
     updateSpanText("streak", `Streak: ${streak > 0 ? streak : 0}`);
     //updateSpanText("streak-lives", `Streak Lives: ${streakLives}`);
 
