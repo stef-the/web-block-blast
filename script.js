@@ -598,7 +598,7 @@ function drawShape(shape, divId, color) {
         // random shape color by default, set in arguments
         // fetch hsl color
         let hslColor = hexToHsl(color);
-        
+
         // draw outline (two triangles)
         border = 8;
 
@@ -610,7 +610,9 @@ function drawShape(shape, divId, color) {
         ctx.closePath();
 
         // fill the top left triangle
-        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2] + 5}%)`;
+        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${
+          hslColor[2] + 5
+        }%)`;
         ctx.fill();
 
         // bottom right triangle
@@ -621,7 +623,9 @@ function drawShape(shape, divId, color) {
         ctx.closePath();
 
         // fill the bottom right triangle
-        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2] - 5}%)`;
+        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${
+          hslColor[2] - 5
+        }%)`;
         ctx.fill();
 
         // draw inner rectangle
@@ -756,7 +760,7 @@ function shapeDragEnd(event) {
   let shape = shapeBlueprints[shapeIndex];
 
   // get the original score before updating to compare
-  let originalScore = score;
+  const originalScore = score;
 
   // rotate the shape based on the number of rotations
   for (let i = 0; i < shapeRotations; i++) {
@@ -808,17 +812,17 @@ function shapeDragEnd(event) {
         streak += linesCleared;
       }
       // add to the score based on the number of lines cleared and the streak
-      score += linesCleared * 10 * (streak + 1);
+      score += linesCleared * 10 * (streak + 3);
+      console.log(
+        streak >= 0 ? linesCleared * 10 * (streak + 1) : linesCleared * 10
+      );
       // set streak lives to 3
       streakLives = 3;
     } else {
       // decrement streak lives if no lines were cleared
-      if (streak > 0) {
-        streakLives--;
-      }
-      if (streakLives === 0) {
-        streak = 0;
-      }
+      if (streak > 0) streakLives--;
+      // reset the streak if no lines were cleared and the streak lives are 0
+      if (streakLives === 0) streak = 0;
     }
 
     // update the score and streak text
