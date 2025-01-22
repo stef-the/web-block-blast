@@ -208,13 +208,80 @@ hexToRgb = (hex) => {
 // format rgb color string
 rgbToRgb = (rgb) => {
   return rgb.split("(")[1].split(")")[0].split(",");
+};
+
+// convert hex color to hsl
+hexToHsl = (hex) => {
+  let rgb = hexToRgb(hex);
+  return rgbToHsl(rgb);
+};
+
+// convert rgb color to hsl hue
+function rgbToHue(rgb) {
+  let r = rgb[0] / 255;
+  let g = rgb[1] / 255;
+  let b = rgb[2] / 255;
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+
+  const c = max - min;
+  let hue;
+  if (c == 0) {
+    hue = 0;
+  } else {
+    switch (max) {
+      case r:
+        var segment = (g - b) / c;
+        var shift = 0 / 60; // R° / (360° / hex sides)
+        if (segment < 0) {
+          // hue > 180, full rotation
+          shift = 360 / 60; // R° / (360° / hex sides)
+        }
+        hue = segment + shift;
+        break;
+      case g:
+        var segment = (b - r) / c;
+        var shift = 120 / 60; // G° / (360° / hex sides)
+        hue = segment + shift;
+        break;
+      case b:
+        var segment = (r - g) / c;
+        var shift = 240 / 60; // B° / (360° / hex sides)
+        hue = segment + shift;
+        break;
+    }
+  }
+  return hue * 60; // hue is in [0,6], scale it up
 }
+
+// convert rgb to hsl
+rgbToHsl = (rgb) => {
+  let r = rgb[0] / 255;
+  let g = rgb[1] / 255;
+  let b = rgb[2] / 255;
+
+  const hue = rgbToHue(rgb);
+
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+
+  const l = (max + min) / 2;
+
+  let s = 0;
+
+  if (max != min) {
+    s = l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min);
+  }
+
+  return [hue, s * 100, l * 100];
+};
 
 // get luma value of a hex color
 function getLuma(rgb) {
   // per ITU-R BT.709
   const lumaValue = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-  return lumaValue; 
+  return lumaValue;
 }
 
 // ------------------------------------
@@ -234,30 +301,25 @@ function handleOnResize() {
     window.innerHeight * 0.8 -
     document.getElementById("shape-container").clientHeight;
   const canvasSize = Math.min(window.innerWidth, minHeight) * 0.8;
-  const canvasWidth = canvasSize;
-  const canvasHeight = canvasSize;
 
   // calculate cell size
   const cellSize = canvasSize / globalGridSize;
 
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
 
   // canvas size setup and centering
-  canvas.style.width = `${canvasWidth}px`;
-  canvas.style.height = `${canvasHeight}px`;
-  canvas.style.top = `calc(20vh + ${
-    document.getElementById("shape-container").clientHeight
-  }px)`;
-  canvas.style.left = `${(window.innerWidth - canvasWidth) / 2}px`;
+  canvas.style.width = `${canvasSize}px`;
+  canvas.style.height = `${canvasSize}px`;
+  canvas.style.left = `${(window.innerWidth - canvasSize) / 2}px`;
 
   drawFullGrid(globalGridSize);
 
   // format the shape container
   const shapeContainer = document.getElementById("shape-container");
-  shapeContainer.style.width = `${canvasWidth - 2}px`;
-  shapeContainer.style.height = `${cellSize * 2 - 2}px`;
-  shapeContainer.style.left = `${(window.innerWidth - canvasWidth) / 2}px`;
+  shapeContainer.style.width = `${canvasSize - 2}px`;
+  shapeContainer.style.height = `${cellSize * 4 - 2}px`;
+  shapeContainer.style.left = `${(window.innerWidth - canvasSize) / 2}px`;
 
   updateShapes(); // update shapes
 }
@@ -282,7 +344,7 @@ function handleOnMouseMove(event) {
   if (cellIndex && !dragging) {
     if (!includesArray(cells, cellIndex)) {
       drawFullGrid(gridSize);
-      fillCell(cellIndex, "#c0c0c0", gridSize);
+      fillCell(cellIndex, "#c0c0c0", gridSize, false);
     }
   } else {
     drawFullGrid(gridSize);
@@ -330,7 +392,6 @@ function createCanvasElement() {
   // canvas size setup and centering
   canvas.style.width = `${canvasSize}px`;
   canvas.style.height = `${canvasSize}px`;
-  canvas.style.top = `calc(20vh + ${shapeContainer.clientHeight}px)`;
   canvas.style.left = `${(window.innerWidth - canvasSize) / 2}px`;
 
   // add a border
@@ -408,18 +469,56 @@ function findCellIndex(mouseX, mouseY, gridSize) {
 }
 
 // fills in a cell with a color
-function fillCell(cellIndex, color, gridSize = 8) {
+function fillCell(cellIndex, color, gridSize = 8, outline = true) {
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
+
+  let cellBorder = 10;
 
   const canvasSize = canvas.width; // fetch canvas width to prevent resizing
   const cellSize = canvasSize / gridSize;
 
+  // convert color to hsl
+  const hslColor = hexToHsl(color);
+
+  // get the cell index
   const cellX = cellIndex[0];
   const cellY = cellIndex[1];
 
-  ctx.fillStyle = color;
-  ctx.fillRect(cellX * cellSize, cellY * cellSize, cellSize, cellSize);
+  if (outline) {
+    // draw outer border (two triangles)
+
+    // top left triangle
+    ctx.beginPath();
+    ctx.moveTo(cellX * cellSize, cellY * cellSize);
+    ctx.lineTo(cellX * cellSize, (cellY + 1) * cellSize);
+    ctx.lineTo((cellX + 1) * cellSize, cellY * cellSize);
+    ctx.closePath();
+
+    // fill the triangle
+    ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2] + 5}%)`;
+    ctx.fill();
+
+    // bottom right triangle
+    ctx.beginPath();
+    ctx.moveTo((cellX + 1) * cellSize, (cellY + 1) * cellSize);
+    ctx.lineTo(cellX * cellSize, (cellY + 1) * cellSize);
+    ctx.lineTo((cellX + 1) * cellSize, cellY * cellSize);
+    ctx.closePath();
+
+    // fill the triangle
+    ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2] - 5}%)`;
+    ctx.fill();
+  } else cellBorder = 0;
+
+  // draw inner rectangle
+  ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2]}%)`;
+  ctx.fillRect(
+    cellX * cellSize + cellBorder,
+    cellY * cellSize + cellBorder,
+    cellSize - cellBorder * 2,
+    cellSize - cellBorder * 2
+  );
 }
 
 // remove colored cells
@@ -478,8 +577,42 @@ function drawShape(shape, divId, color) {
     for (let j = 0; j < shape[i].length; j++) {
       if (shape[i][j] === 1) {
         // random shape color by default, set in arguments
-        ctx.fillStyle = color;
-        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+        // fetch hsl color
+        let hslColor = hexToHsl(color);
+        
+        // draw outline (two triangles)
+        border = 8;
+
+        // top left triangle
+        ctx.beginPath();
+        ctx.moveTo(j * cellSize, i * cellSize);
+        ctx.lineTo(j * cellSize, (i + 1) * cellSize);
+        ctx.lineTo((j + 1) * cellSize, i * cellSize);
+        ctx.closePath();
+
+        // fill the top left triangle
+        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2] + 5}%)`;
+        ctx.fill();
+
+        // bottom right triangle
+        ctx.beginPath();
+        ctx.moveTo((j + 1) * cellSize, (i + 1) * cellSize);
+        ctx.lineTo(j * cellSize, (i + 1) * cellSize);
+        ctx.lineTo((j + 1) * cellSize, i * cellSize);
+        ctx.closePath();
+
+        // fill the bottom right triangle
+        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2] - 5}%)`;
+        ctx.fill();
+
+        // draw inner rectangle
+        ctx.fillStyle = `hsl(${hslColor[0]}, ${hslColor[1]}%, ${hslColor[2]}%)`;
+        ctx.fillRect(
+          j * cellSize + border,
+          i * cellSize + border,
+          cellSize - border * 2,
+          cellSize - border * 2
+        );
       }
     }
   }
@@ -1065,7 +1198,8 @@ function animateAlert(
 
   // if alert color is dark, set the outline to white equivalent
   if (getLuma(rgbToRgb(alert.style.color)) < 90) {
-    alert.style.textShadow = "-1px -1px 0 #eee, 1px -1px 0 #eee, -1px 1px 0 #eee, 1px 1px 0 #eee";
+    alert.style.textShadow =
+      "-1px -1px 0 #eee, 1px -1px 0 #eee, -1px 1px 0 #eee, 1px 1px 0 #eee";
   }
 
   document.body.appendChild(alert);

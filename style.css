@@ -9,27 +9,21 @@ body {
   user-select: none;
 }
 
-#span-container {
+#canvas-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 70vh;
+  position: fixed;
+  top: 5vh;
+  width: 100%;
+}
+
+#outer-shape-container {
   width: 100%;
   display: flex;
   justify-content: space-evenly;
-}
-
-#span-container span {
-  display: inline-block;
-  margin: 1rem;
-  padding: 0.5rem 1rem;
-  background-color: #ddd;
-  border: 2px solid #aaa;
-  cursor: pointer;
-  font-family: 'Courier New', Courier, monospace;
-  color: #333;
-}
-
-#canvas {
-  display: block;
-  position: fixed;
-  background-color: #ddd;
 }
 
 #shape-container {
@@ -37,9 +31,7 @@ body {
   justify-content: space-evenly;
   background-color: #ddd;
   border: 2px solid #aaa;
-  position: fixed;
-  top: 10vh;
-  height: 10vh;
+  height: 20vh;
   z-index: 1;
 }
 
@@ -65,9 +57,35 @@ body {
 .points-alert {
   opacity: 1;
   position: absolute;
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000,
+    1px 1px 0 #000;
   font-size: 1.5rem;
   font-weight: bold;
   font-family: monospace;
   color: #f0f0f0;
+}
+
+#canvas {
+  margin-top: 5vh;
+}
+
+#span-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  flex-wrap: wrap;
+  position: fixed;
+  max-height: 20vh;
+  bottom: 5vh;
+}
+
+#span-container span {
+  display: inline-block;
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #ddd;
+  border: 2px solid #aaa;
+  cursor: pointer;
+  font-family: "Courier New", Courier, monospace;
+  color: #333;
 }
