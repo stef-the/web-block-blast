@@ -132,10 +132,10 @@ let shapeColors = colorPalettes[currentPalette];
 // score and streak text
 // ------------------------------------
 
-updateSpanText("score", `Score: ${score}`);
+updateSpanText("score", `${score}`);
 updateSpanText("streak", `Streak: ${streak}`);
-updateSpanText("streak-lives", `Streak Lives: ${streakLives}`);
-updateSpanText("high-score", `High Score: ${highScore}`);
+//updateSpanText("streak-lives", `Streak Lives: ${streakLives}`);
+//updateSpanText("high-score", `High Score: ${highScore}`);
 updateSpanText("color-palette", `Colour Palette: ${currentPalette}`);
 
 // ------------------------------------
@@ -803,14 +803,14 @@ function shapeDragEnd(event) {
     }
 
     // update the score and streak text
-    updateSpanText("score", `Score: ${score}`);
+    updateSpanText("score", `${score}`);
     updateSpanText("streak", `Streak: ${streak > 0 ? streak : 0}`);
-    updateSpanText("streak-lives", `Streak Lives: ${streakLives}`);
+    //updateSpanText("streak-lives", `Streak Lives: ${streakLives}`);
 
     if (score > highScore) {
       highScore = score;
       setCookie("highScore", highScore);
-      updateSpanText("high-score", `High Score: ${highScore}`);
+      //updateSpanText("high-score", `High Score: ${highScore}`);
     }
 
     // check if all three shapes have been placed
@@ -933,6 +933,18 @@ const shapeBlueprints = [
   ],
   // shape 16: 1x1 square
   [[1]],
+  // shape 17: Big L right
+  [
+    [1, 0, 0],
+    [1, 0, 0],
+    [1, 1, 1],
+  ],
+  // shape 18: Big L left
+  [
+    [0, 0, 1],
+    [0, 0, 1],
+    [1, 1, 1],
+  ],
 ];
 
 // ------------------------------------
